@@ -268,6 +268,6 @@ def list_questions(data_dir: Path | str = DATA_DIR) -> list[str]:
     return sorted(p.stem.removeprefix("params_") for p in Path(data_dir).glob("params_*.json"))
 
 
-if __name__ == "__main__":  # quick manual check:  python -m src.data_loader
+if __name__ == "__main__":  # quick manual check:  python -m src.data_loader.
     for q in list_questions():
         print(load_question(q).summary(), end="\n\n")
