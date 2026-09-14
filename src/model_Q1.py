@@ -40,6 +40,8 @@ class Results:
     question: str
     status: str
     objective: float
+    utility: float
+    procurement_cost: float
     hourly: pd.DataFrame                   # one row per hour: variables, prices, hourly duals
     duals: dict[str, float] = field(default_factory=dict)   # duals of non-hourly constraints
     meta: dict = field(default_factory=dict)                 # anything else worth keeping (scenario name, ...)
@@ -59,6 +61,8 @@ class Results:
         cols = [c for c in self.hourly.columns if not c.startswith("dual_")]
         return (
             f"status: {self.status} | objective: {self.objective:.2f} DKK\n"
+            f"utility: {self.utility:.2f} DKK\n"
+            f"procurement cost: {self.procurement_cost:.2f} DKK\n"
             f"daily totals (kWh): " + ", ".join(f"{c}={self.hourly[c].sum():.1f}" for c in cols if c in ("import", "export", "load", "pv"))
             + (f"\nduals: {self.duals}" if self.duals else "")
         )
@@ -203,15 +207,27 @@ class FlexibleConsumerModel:
             except (AttributeError, gp.GurobiError):
                 # No duals available (e.g. model with integer variables)
                 pass
+        
+        # Objective components
+        utility = sum(d.consumption_utility * self.var["load"][t].X for t in T)
 
+        procurement_cost = sum(
+            d.pv_marginal_cost * self.var["pv"][t].X
+            + (d.energy_price[t] + d.import_tariff) * self.var["import"][t].X
+            - (d.energy_price[t] - d.export_tariff) * self.var["export"][t].X
+            for t in T
+        )
+                
         return Results(
             question=d.question,
             status=status,
             objective=self.m.ObjVal,
+            utility=utility,
+            procurement_cost=procurement_cost,
             hourly=hourly,
             duals=duals,
             meta={"scalar_variables": scalars},
-        )
+)
 
 
 _STATUS = {
