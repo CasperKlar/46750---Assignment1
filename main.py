@@ -15,19 +15,31 @@ from pathlib import Path
 import matplotlib
 
 from src.data_loader import load_question, list_questions
-from src.model_Q1 import FlexibleConsumerModel, Results
+from src.model_Q1 import FlexibleConsumerModel as Q1Model, Results as Q1Results
+from src.model_Q2_lin import FlexibleConsumerModel as Q2LinModel, Results as Q2LinResults
+from src.model_Q2_qua import FlexibleConsumerModel as Q2QuaModel, Results as Q2QuaResults
 from src.plotting import plot_duals, plot_inputs, plot_scenario_comparison, plot_schedule
 from src.scenarios import scale_prices, scale_pv, set_tariffs
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
 
+def get_model(question: str, data):
+    if question.startswith("Q1"):
+        return Q1Model(data).build()
+    elif question.startswith("Q2_linear"):
+        return Q2LinModel(data).build()
+    elif question.startswith("Q2_quadratic"):
+        return Q2QuaModel(data).build()
+    else:
+        raise ValueError(f"Unknown question type: {question}")
 
-def run_base_case(question: str, out: Path, show: bool) -> Results | None:
+def run_base_case(question: str, out: Path, show: bool):
     data = load_question(question)
     print(data.summary(), "\n")
     plot_inputs(data, save_to=out / "inputs.png")
 
-    model = FlexibleConsumerModel(data).build()
+    model = get_model(question, data)
+
     try:
         results = model.solve()
     except NotImplementedError as e:
@@ -38,8 +50,10 @@ def run_base_case(question: str, out: Path, show: bool) -> Results | None:
     results.save(out)
     plot_schedule(results, data, save_to=out / "schedule.png")
     plot_duals(results, data, save_to=out / "duals.png")
+
     if show:
         matplotlib.pyplot.show()
+
     return results
 
 
@@ -55,7 +69,7 @@ def run_scenarios(question: str, out: Path) -> dict[str, Results]:
     }
     runs: dict[str, Results] = {}
     for name, data in scenarios.items():
-        results = FlexibleConsumerModel(data).build().solve()
+        results = get_model(question, data).solve()
         results.save(out, tag=name)
         runs[name] = results
         print(f"{name:>14}: cost {results.objective:8.2f} DKK | import {results.hourly['import'].sum():5.1f} kWh"
