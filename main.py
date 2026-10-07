@@ -18,6 +18,7 @@ from src.data_loader import load_question, list_questions
 from src.model_Q1 import FlexibleConsumerModel as Q1Model, Results as Q1Results
 from src.model_Q2_lin import FlexibleConsumerModel as Q2LinModel, Results as Q2LinResults
 from src.model_Q2_qua import FlexibleConsumerModel as Q2QuaModel, Results as Q2QuaResults
+from src.model_Q3 import FlexibleConsumerModel as Q3Model, Results as Q3Results
 from src.plotting import plot_duals, plot_inputs, plot_scenario_comparison, plot_schedule
 from src.scenarios import scale_prices, scale_pv, set_tariffs
 
@@ -30,6 +31,8 @@ def get_model(question: str, data):
         return Q2LinModel(data).build()
     elif question.startswith("Q2_quadratic"):
         return Q2QuaModel(data).build()
+    elif question.startswith("Q3"):
+        return Q3Model(data).build()
     else:
         raise ValueError(f"Unknown question type: {question}")
 
