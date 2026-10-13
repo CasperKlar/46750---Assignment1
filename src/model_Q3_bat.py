@@ -206,7 +206,7 @@ class FlexibleConsumerModel:
         #Energy bounds constraints
         #self.con["soc_min"] = m.addConstrs((E_bat[t] >= 0 for t in T), name="soc_min")
         self.con["soc_max"] = m.addConstrs((E_bat[t] <= d.battery_capacity_kWh for t in T), name="soc_max")
-        E_end_min = 0.5 * d.battery_capacity_kWh  # Example: 50% reserve
+        E_end_min = 2.0 #0.5 * d.battery_capacity_kWh  # Example: 50% reserve
         self.con["soc_final"] = m.addConstr(E_bat[T.stop-1] >= E_end_min, name="soc_final")
         
         #Power bounds constraints

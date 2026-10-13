@@ -20,6 +20,7 @@ from src.model_Q2_lin import FlexibleConsumerModel as Q2LinModel, Results as Q2L
 from src.model_Q2_qua import FlexibleConsumerModel as Q2QuaModel, Results as Q2QuaResults
 from src.model_Q3 import FlexibleConsumerModel as Q3Model, Results as Q3Results
 from src.model_Q3_bat import FlexibleConsumerModel as Q3BatModel, Results as Q3BatResults
+from src.model_Q3_bat_sensitivity import run_sensitivity
 from src.plotting import plot_battery, plot_duals, plot_inputs, plot_scenario_comparison, plot_schedule
 from src.scenarios import scale_prices, scale_pv, set_tariffs
 
@@ -93,6 +94,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--question", default="Q1_caseA", choices=list_questions(), help="data case to use")
     parser.add_argument("--scenarios", action="store_true", help="also run the example sensitivity scenarios")
+    parser.add_argument("--sensitivity", action="store_true", help="Run Q3 battery sensitivity analyses")
     parser.add_argument("--show", action="store_true", help="open the figures in a window")
     args = parser.parse_args()
 
@@ -104,6 +106,10 @@ def main() -> None:
     base = run_base_case(args.question, out, args.show)
     if args.scenarios and base is not None:
         run_scenarios(args.question, out)
+    if args.sensitivity:
+        if args.question != "Q3_battery":
+            parser.error("--sensitivity is only available for Q3_battery")
+        run_sensitivity(load_question(args.question), out)
     print(f"\nOutputs written to {out}")
 
 
