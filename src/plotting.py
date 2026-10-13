@@ -107,3 +107,67 @@ def plot_scenario_comparison(
     ax.set(ylabel=ylabel, title=f"Scenario comparison - {metric}")
     ax.tick_params(axis="x", rotation=20)
     return _finish(fig, save_to)
+
+
+def plot_battery(results, save_to):
+    import matplotlib.pyplot as plt
+
+    h = results.hourly
+    hours = h.index
+
+    fig, ax1 = plt.subplots(figsize=(10, 4))
+
+    # Left axis: Charging power (positive)
+    ax1.step(
+        hours, h["P_ch"],
+        where="mid",
+        color="forestgreen",
+        linewidth=2,
+        label="Charging power"
+    )
+
+    # Left axis: Discharging power (negative)
+    ax1.step(
+        hours, -h["P_dis"],
+        where="mid",
+        color="darkorange",
+        linewidth=2,
+        label="Discharging power"
+    )
+
+    ax1.axhline(0, color="black", linewidth=0.7)
+    ax1.set_xlabel("Hour")
+    ax1.set_ylabel("Battery power [kW]")
+    ax1.set_ylim(-4.3, 4.3)
+
+    # Right axis: State of charge
+    ax2 = ax1.twinx()
+    ax2.bar(
+        hours, h["E_bat"],
+        width=0.7,
+        color="steelblue",
+        alpha=0.35,
+        label="Stored energy"
+    )
+    ax2.set_ylabel("Stored energy [kWh]")
+    ax2.set_ylim(-4.3, 4.3)
+
+    # Combined legend
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    
+    ax1.set_yticks(range(-4, 5, 2))
+    ax2.set_yticks(range(0, 5, 2))
+
+    ax1.legend(
+        lines1 + lines2,
+        labels1 + labels2,
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.15),
+        ncol=3
+    )
+
+    ax1.set_title("Optimal battery operation")
+    fig.tight_layout()
+    fig.savefig(save_to, dpi=200, bbox_inches="tight")
+    plt.close(fig)

@@ -19,7 +19,8 @@ from src.model_Q1 import FlexibleConsumerModel as Q1Model, Results as Q1Results
 from src.model_Q2_lin import FlexibleConsumerModel as Q2LinModel, Results as Q2LinResults
 from src.model_Q2_qua import FlexibleConsumerModel as Q2QuaModel, Results as Q2QuaResults
 from src.model_Q3 import FlexibleConsumerModel as Q3Model, Results as Q3Results
-from src.plotting import plot_duals, plot_inputs, plot_scenario_comparison, plot_schedule
+from src.model_Q3_bat import FlexibleConsumerModel as Q3BatModel, Results as Q3BatResults
+from src.plotting import plot_battery, plot_duals, plot_inputs, plot_scenario_comparison, plot_schedule
 from src.scenarios import scale_prices, scale_pv, set_tariffs
 
 RESULTS_DIR = Path(__file__).resolve().parent / "results"
@@ -31,8 +32,10 @@ def get_model(question: str, data):
         return Q2LinModel(data).build()
     elif question.startswith("Q2_quadratic"):
         return Q2QuaModel(data).build()
-    elif question.startswith("Q3"):
-        return Q3Model(data).build()
+    #elif question.startswith("Q3"):
+        #return Q3Model(data).build()
+    elif question.startswith("Q3_battery"):
+        return Q3BatModel(data).build()
     else:
         raise ValueError(f"Unknown question type: {question}")
 
@@ -52,6 +55,11 @@ def run_base_case(question: str, out: Path, show: bool):
     print(results, "\n")
     results.save(out)
     plot_schedule(results, data, save_to=out / "schedule.png")
+    
+    # Plot battery operation only for battery models
+    if "E_bat" in results.hourly.columns:
+        plot_battery(results, out / "battery_operation.png")
+    
     plot_duals(results, data, save_to=out / "duals.png")
 
     if show:
